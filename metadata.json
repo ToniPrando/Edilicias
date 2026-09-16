@@ -1,0 +1,6 @@
+{
+  "name": "Edilicias",
+  "description": "App da doceria artesanal Edilicias com cardápio de doces, categorias e opções completas de personalização.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
