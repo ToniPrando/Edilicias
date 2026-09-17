@@ -10,6 +10,14 @@ import com.example.model.SweetItem
 import com.example.model.ToppingOption
 
 import androidx.compose.runtime.mutableStateListOf
+import android.content.Context
+import com.example.data.db.AppDatabase
+import com.example.data.db.toEntity
+import com.example.data.db.toSweetItem
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 object SweetRepository {
 
@@ -196,8 +204,50 @@ object SweetRepository {
     addAll(initialSweetItems)
   }
 
+  private var database: AppDatabase? = null
+  private var isInitialized = false
+
+  fun initialize(context: Context) {
+    if (isInitialized) return
+    isInitialized = true
+    val db = AppDatabase.getInstance(context)
+    database = db
+
+    CoroutineScope(Dispatchers.IO).launch {
+      try {
+        val count = db.sweetDao().getCount()
+        if (count == 0) {
+          // Pre-populate with defaults on first launch
+          val entities = initialSweetItems.map { it.toEntity() }
+          db.sweetDao().insertAll(entities)
+        } else {
+          // Load stored sweets from Room database
+          val loadedEntities = db.sweetDao().getAllSweets()
+          if (loadedEntities.isNotEmpty()) {
+            val mappedItems = loadedEntities.map { it.toSweetItem() }
+            withContext(Dispatchers.Main) {
+              sweetItems.clear()
+              sweetItems.addAll(mappedItems)
+            }
+          }
+        }
+      } catch (e: Exception) {
+        // Fallback: in-memory items remain available
+      }
+    }
+  }
+
   fun addItem(item: SweetItem) {
     sweetItems.add(0, item)
+    database?.let { db ->
+      CoroutineScope(Dispatchers.IO).launch {
+        try {
+          db.sweetDao().insert(item.toEntity())
+        } catch (e: Exception) {
+          // Ignored
+        }
+      }
+    }
   }
 
   fun updateItem(updatedItem: SweetItem) {
@@ -205,14 +255,42 @@ object SweetRepository {
     if (index != -1) {
       sweetItems[index] = updatedItem
     }
+    database?.let { db ->
+      CoroutineScope(Dispatchers.IO).launch {
+        try {
+          db.sweetDao().insert(updatedItem.toEntity())
+        } catch (e: Exception) {
+          // Ignored
+        }
+      }
+    }
   }
 
   fun deleteItem(itemId: String) {
     sweetItems.removeAll { it.id == itemId }
+    database?.let { db ->
+      CoroutineScope(Dispatchers.IO).launch {
+        try {
+          db.sweetDao().deleteById(itemId)
+        } catch (e: Exception) {
+          // Ignored
+        }
+      }
+    }
   }
 
   fun resetToDefaults() {
     sweetItems.clear()
     sweetItems.addAll(initialSweetItems)
+    database?.let { db ->
+      CoroutineScope(Dispatchers.IO).launch {
+        try {
+          db.sweetDao().clearAll()
+          db.sweetDao().insertAll(initialSweetItems.map { it.toEntity() })
+        } catch (e: Exception) {
+          // Ignored
+        }
+      }
+    }
   }
 }

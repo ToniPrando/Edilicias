@@ -17,6 +17,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.data.SweetRepository
 import com.example.ui.AdminPasswordDialog
 import com.example.ui.AdminScreen
 import com.example.ui.MenuScreen
@@ -33,6 +34,7 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+    SweetRepository.initialize(applicationContext)
     setContent {
       MyApplicationTheme {
         EdiliciasApp()

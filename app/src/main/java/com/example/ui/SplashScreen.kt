@@ -204,37 +204,6 @@ fun SplashScreen(
         textAlign = TextAlign.Center,
         modifier = Modifier.padding(horizontal = 24.dp),
       )
-
-      Spacer(modifier = Modifier.height(24.dp))
-
-      // Botão de ADM no final da página inicial solicitado pelo usuário
-      Surface(
-        onClick = onOpenAdmin,
-        shape = RoundedCornerShape(20.dp),
-        color = Color(0xFFFBF8F6),
-        border = BorderStroke(1.2.dp, EdiliciasChocolate.copy(alpha = 0.35f)),
-        shadowElevation = 1.dp,
-        modifier = Modifier.testTag("admin_area_button"),
-      ) {
-        Row(
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(8.dp),
-          modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp),
-        ) {
-          Icon(
-            imageVector = Icons.Rounded.AdminPanelSettings,
-            contentDescription = "Painel do Administrador",
-            tint = EdiliciasChocolate,
-            modifier = Modifier.size(18.dp),
-          )
-          Text(
-            text = "Área do Administrador (ADM)",
-            color = EdiliciasChocolate,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-          )
-        }
-      }
     }
   }
 }

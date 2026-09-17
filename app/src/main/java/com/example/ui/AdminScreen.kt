@@ -1,9 +1,15 @@
 package com.example.ui
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +42,8 @@ import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.Link
+import androidx.compose.material.icons.rounded.PhotoLibrary
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Storefront
@@ -84,6 +92,7 @@ import com.example.R
 import com.example.data.SweetRepository
 import com.example.model.Category
 import com.example.model.SweetItem
+import com.example.ui.components.SweetImage
 import com.example.ui.theme.EdiliciasChocolate
 import com.example.ui.theme.EdiliciasCreamBg
 import com.example.ui.theme.EdiliciasOutline
@@ -550,8 +559,8 @@ private fun AdminSweetCard(
       horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
       // Thumbnail
-      Image(
-        painter = painterResource(id = sweetItem.imageRes),
+      SweetImage(
+        sweetItem = sweetItem,
         contentDescription = sweetItem.name,
         contentScale = ContentScale.Crop,
         modifier = Modifier
@@ -691,6 +700,8 @@ private fun SweetEditorDialog(
   onDismiss: () -> Unit,
   onSave: (SweetItem) -> Unit,
 ) {
+  val context = LocalContext.current
+
   var name by remember { mutableStateOf(itemToEdit?.name ?: "") }
   var category by remember {
     mutableStateOf(itemToEdit?.category ?: Category.CAKES)
@@ -704,9 +715,30 @@ private fun SweetEditorDialog(
   var isCustomizable by remember { mutableStateOf(itemToEdit?.isCustomizable ?: true) }
   var allowsMessage by remember { mutableStateOf(itemToEdit?.allowsCustomMessage ?: true) }
 
-  // Photo selection (choice of existing assets)
+  // Photo selection: Presets, Device Photo Picker, or URL
   var selectedImageRes by remember {
     mutableStateOf(itemToEdit?.imageRes ?: R.drawable.img_bolo)
+  }
+  var customImageUri by remember {
+    mutableStateOf(itemToEdit?.customImageUri ?: "")
+  }
+  var urlInputText by remember {
+    mutableStateOf(
+      if (itemToEdit?.customImageUri?.startsWith("http") == true) itemToEdit.customImageUri ?: "" else ""
+    )
+  }
+  var isUrlInputExpanded by remember {
+    mutableStateOf(itemToEdit?.customImageUri?.startsWith("http") == true)
+  }
+
+  val photoPickerLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.PickVisualMedia()
+  ) { uri: Uri? ->
+    if (uri != null) {
+      customImageUri = uri.toString()
+      isUrlInputExpanded = false
+      Toast.makeText(context, "Foto do dispositivo selecionada!", Toast.LENGTH_SHORT).show()
+    }
   }
 
   var nameError by remember { mutableStateOf(false) }
@@ -892,53 +924,277 @@ private fun SweetEditorDialog(
             )
           }
 
-          // 5. Foto do Doce
-          Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+          // 5. Foto do Doce (Dispositivo, URL ou Padrão)
+          Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
-              text = "Foto de Apresentação",
+              text = "Foto do Doce *",
               style = MaterialTheme.typography.labelLarge,
               fontWeight = FontWeight.Bold,
               color = EdiliciasChocolate,
             )
-            Row(
-              horizontalArrangement = Arrangement.spacedBy(12.dp),
+
+            // Current Image Preview Card
+            Card(
+              shape = RoundedCornerShape(18.dp),
+              colors = CardDefaults.cardColors(containerColor = Color.White),
+              elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+              modifier = Modifier.fillMaxWidth(),
             ) {
-              val photos = listOf(
-                Pair(R.drawable.img_bolo, "Bolo Festivo"),
-                Pair(R.drawable.img_brigadeiros, "Brigadeiros"),
-                Pair(R.drawable.img_cupcakes, "Cupcakes"),
-              )
-              photos.forEach { (res, label) ->
-                val isSelected = selectedImageRes == res
-                Surface(
-                  onClick = { selectedImageRes = res },
-                  shape = RoundedCornerShape(14.dp),
-                  border = BorderStroke(
-                    if (isSelected) 2.dp else 1.dp,
-                    if (isSelected) EdiliciasPink else EdiliciasOutline
-                  ),
-                  color = if (isSelected) EdiliciasPinkLight else Color.White,
-                  modifier = Modifier.weight(1f),
+              Column(
+                modifier = Modifier.padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+              ) {
+                Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
-                  Column(
-                    modifier = Modifier.padding(6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                  Box(
+                    modifier = Modifier
+                      .size(90.dp)
+                      .clip(RoundedCornerShape(14.dp))
+                      .border(1.dp, EdiliciasOutline, RoundedCornerShape(14.dp)),
                   ) {
-                    Image(
-                      painter = painterResource(id = res),
-                      contentDescription = label,
+                    SweetImage(
+                      imageRes = selectedImageRes,
+                      customImageUri = customImageUri.ifBlank { null },
+                      contentDescription = "Prévia da imagem do doce",
                       contentScale = ContentScale.Crop,
-                      modifier = Modifier
-                        .size(56.dp)
-                        .clip(RoundedCornerShape(10.dp)),
+                      modifier = Modifier.fillMaxSize(),
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
+                  }
+
+                  Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                  ) {
+                    val (sourceBadge, sourceColor) = when {
+                      customImageUri.startsWith("content:") || customImageUri.startsWith("file:") ->
+                        Pair("Foto do Dispositivo", EdiliciasTeal)
+                      customImageUri.startsWith("http://") || customImageUri.startsWith("https://") ->
+                        Pair("Imagem via URL", EdiliciasPink)
+                      else -> Pair("Ilustração Padrão", EdiliciasChocolate)
+                    }
+
+                    Surface(
+                      shape = RoundedCornerShape(8.dp),
+                      color = sourceColor.copy(alpha = 0.12f),
+                    ) {
+                      Text(
+                        text = sourceBadge,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = sourceColor,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                      )
+                    }
+
                     Text(
-                      text = label,
-                      style = MaterialTheme.typography.labelSmall,
-                      fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                      color = if (isSelected) EdiliciasChocolate else EdiliciasTextSecondary,
+                      text = if (customImageUri.isNotBlank()) "Imagem personalizada ativa" else "Imagem ilustrativa padrão",
+                      style = MaterialTheme.typography.bodySmall,
+                      color = EdiliciasTextSecondary,
                     )
+
+                    if (customImageUri.isNotBlank()) {
+                      TextButton(
+                        onClick = {
+                          customImageUri = ""
+                          urlInputText = ""
+                          isUrlInputExpanded = false
+                        },
+                        contentPadding = PaddingValues(0.dp),
+                      ) {
+                        Icon(
+                          imageVector = Icons.Rounded.Clear,
+                          contentDescription = null,
+                          tint = Color(0xFFC0392B),
+                          modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                          text = "Remover foto personalizada",
+                          style = MaterialTheme.typography.labelSmall,
+                          color = Color(0xFFC0392B),
+                        )
+                      }
+                    }
+                  }
+                }
+
+                HorizontalDivider(color = EdiliciasOutline.copy(alpha = 0.5f))
+
+                // Action buttons: Pick from device & Enter URL
+                Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                  // Button 1: Escolher do Dispositivo
+                  Button(
+                    onClick = {
+                      photoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                      )
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                      containerColor = EdiliciasTeal,
+                      contentColor = Color.White,
+                    ),
+                    modifier = Modifier
+                      .weight(1f)
+                      .testTag("admin_pick_image_device_btn"),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                  ) {
+                    Icon(
+                      imageVector = Icons.Rounded.PhotoLibrary,
+                      contentDescription = null,
+                      modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                      text = "Dispositivo",
+                      style = MaterialTheme.typography.labelSmall,
+                      fontWeight = FontWeight.Bold,
+                    )
+                  }
+
+                  // Button 2: Inserir Link / URL
+                  OutlinedButton(
+                    onClick = {
+                      isUrlInputExpanded = !isUrlInputExpanded
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.2.dp, if (isUrlInputExpanded) EdiliciasPink else EdiliciasOutline),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                      contentColor = if (isUrlInputExpanded) EdiliciasPink else EdiliciasChocolate
+                    ),
+                    modifier = Modifier
+                      .weight(1f)
+                      .testTag("admin_toggle_url_btn"),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                  ) {
+                    Icon(
+                      imageVector = Icons.Rounded.Link,
+                      contentDescription = null,
+                      modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                      text = "URL da Web",
+                      style = MaterialTheme.typography.labelSmall,
+                      fontWeight = FontWeight.Bold,
+                    )
+                  }
+                }
+
+                // Expandable URL text field
+                AnimatedVisibility(visible = isUrlInputExpanded) {
+                  Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                  ) {
+                    OutlinedTextField(
+                      value = urlInputText,
+                      onValueChange = {
+                        urlInputText = it
+                        customImageUri = it.trim()
+                      },
+                      placeholder = { Text("https://exemplo.com/foto-do-doce.jpg") },
+                      leadingIcon = {
+                        Icon(
+                          imageVector = Icons.Rounded.Link,
+                          contentDescription = null,
+                          tint = EdiliciasPink,
+                        )
+                      },
+                      trailingIcon = {
+                        if (urlInputText.isNotEmpty()) {
+                          IconButton(onClick = {
+                            urlInputText = ""
+                            customImageUri = ""
+                          }) {
+                            Icon(
+                              imageVector = Icons.Rounded.Clear,
+                              contentDescription = "Limpar URL",
+                              tint = EdiliciasTextSecondary,
+                            )
+                          }
+                        }
+                      },
+                      modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("admin_input_image_url"),
+                      shape = RoundedCornerShape(12.dp),
+                      singleLine = true,
+                      supportingText = {
+                        Text(
+                          text = "Insira o link direto da imagem na internet (JPG, PNG ou WebP)",
+                          style = MaterialTheme.typography.bodySmall,
+                          color = EdiliciasTextSecondary,
+                        )
+                      },
+                      colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = EdiliciasPink,
+                        unfocusedBorderColor = EdiliciasOutline,
+                        focusedContainerColor = Color(0xFFFCFAF9),
+                        unfocusedContainerColor = Color(0xFFFCFAF9),
+                      ),
+                    )
+                  }
+                }
+
+                // Preset options fallback
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                  Text(
+                    text = "Ou escolha uma imagem padrão:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = EdiliciasTextSecondary,
+                  )
+                  Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val presets = listOf(
+                      Pair(R.drawable.img_bolo, "Bolo"),
+                      Pair(R.drawable.img_brigadeiros, "Brigadeiros"),
+                      Pair(R.drawable.img_cupcakes, "Cupcakes"),
+                    )
+                    presets.forEach { (res, label) ->
+                      val isSelected = selectedImageRes == res && customImageUri.isBlank()
+                      Surface(
+                        onClick = {
+                          selectedImageRes = res
+                          customImageUri = ""
+                          urlInputText = ""
+                          isUrlInputExpanded = false
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isSelected) EdiliciasPinkLight else Color(0xFFF9F7F5),
+                        border = BorderStroke(
+                          if (isSelected) 1.5.dp else 1.dp,
+                          if (isSelected) EdiliciasPink else EdiliciasOutline
+                        ),
+                        modifier = Modifier.weight(1f),
+                      ) {
+                        Row(
+                          modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp),
+                          verticalAlignment = Alignment.CenterVertically,
+                          horizontalArrangement = Arrangement.Center,
+                        ) {
+                          Image(
+                            painter = painterResource(id = res),
+                            contentDescription = label,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                              .size(24.dp)
+                              .clip(RoundedCornerShape(6.dp)),
+                          )
+                          Spacer(modifier = Modifier.width(4.dp))
+                          Text(
+                            text = label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isSelected) EdiliciasChocolate else EdiliciasTextSecondary,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                          )
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -1052,12 +1308,14 @@ private fun SweetEditorDialog(
                 }
 
                 if (valid && parsedPrice != null) {
+                  val finalCustomUri = customImageUri.trim().ifEmpty { null }
                   val resultItem = itemToEdit?.copy(
                     name = name.trim(),
                     category = category,
                     basePrice = parsedPrice,
                     description = description.ifBlank { "Doce artesanal feito com carinho pela Edilicias." },
                     imageRes = selectedImageRes,
+                    customImageUri = finalCustomUri,
                     isCustomizable = isCustomizable,
                     allowsCustomMessage = allowsMessage,
                   ) ?: SweetItem(
@@ -1067,6 +1325,7 @@ private fun SweetEditorDialog(
                     basePrice = parsedPrice,
                     description = description.ifBlank { "Doce artesanal feito com carinho pela Edilicias." },
                     imageRes = selectedImageRes,
+                    customImageUri = finalCustomUri,
                     isCustomizable = isCustomizable,
                     tags = listOf("Novidade", "Artesanal"),
                     availableSizes = when (category) {

@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.model.CartItem
+import com.example.ui.components.SweetImage
 import com.example.ui.theme.EdiliciasChocolate
 import com.example.ui.theme.EdiliciasCreamBg
 import com.example.ui.theme.EdiliciasOutline
@@ -500,8 +501,8 @@ private fun CartItemCard(
       verticalAlignment = Alignment.Top,
       horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-      Image(
-        painter = painterResource(id = cartItem.sweetItem.imageRes),
+      SweetImage(
+        sweetItem = cartItem.sweetItem,
         contentDescription = cartItem.sweetItem.name,
         contentScale = ContentScale.Crop,
         modifier = Modifier

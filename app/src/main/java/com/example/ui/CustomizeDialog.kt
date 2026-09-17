@@ -75,6 +75,7 @@ import com.example.model.FrostingOption
 import com.example.model.SizeOption
 import com.example.model.SweetItem
 import com.example.model.ToppingOption
+import com.example.ui.components.SweetImage
 import com.example.ui.theme.EdiliciasChocolate
 import com.example.ui.theme.EdiliciasCreamBg
 import com.example.ui.theme.EdiliciasGold
@@ -213,8 +214,8 @@ fun CustomizeDialog(
               verticalAlignment = Alignment.CenterVertically,
               horizontalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-              Image(
-                painter = painterResource(id = sweetItem.imageRes),
+              SweetImage(
+                sweetItem = sweetItem,
                 contentDescription = sweetItem.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier

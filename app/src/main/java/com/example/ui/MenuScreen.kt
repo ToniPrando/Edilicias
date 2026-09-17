@@ -78,6 +78,7 @@ import com.example.model.CartItem
 import com.example.model.Category
 import com.example.model.CustomizationSelection
 import com.example.model.SweetItem
+import com.example.ui.components.SweetImage
 import com.example.ui.theme.EdiliciasChocolate
 import com.example.ui.theme.EdiliciasCreamBg
 import com.example.ui.theme.EdiliciasGold
@@ -492,8 +493,8 @@ private fun SweetCard(
           .fillMaxWidth()
           .height(180.dp),
       ) {
-        Image(
-          painter = painterResource(id = sweetItem.imageRes),
+        SweetImage(
+          sweetItem = sweetItem,
           contentDescription = sweetItem.name,
           contentScale = ContentScale.Crop,
           modifier = Modifier.fillMaxSize(),
