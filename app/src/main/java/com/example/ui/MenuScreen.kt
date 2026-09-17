@@ -455,6 +455,7 @@ fun MenuScreen(
       onDismiss = { itemToCustomize = null },
       onAddToCart = { selection ->
         cartItems.add(CartItem(sweetItem = item, customization = selection))
+        itemToCustomize = null
       },
     )
   }

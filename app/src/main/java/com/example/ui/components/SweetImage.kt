@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -40,6 +41,7 @@ fun SweetImage(
       model = ImageRequest.Builder(LocalContext.current)
         .data(trimmedUri)
         .crossfade(true)
+        .bitmapConfig(Bitmap.Config.ARGB_8888)
         .placeholder(imageRes)
         .error(imageRes)
         .fallback(imageRes)

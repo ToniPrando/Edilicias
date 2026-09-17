@@ -29,6 +29,22 @@ fun SweetEntity.toSweetItem(): SweetItem {
   } catch (e: Exception) {
     Category.CAKES
   }
+  val initial = SweetRepository.initialSweetItems.find { it.id == id }
+  if (initial != null) {
+    return initial.copy(
+      name = name,
+      category = cat,
+      description = description,
+      basePrice = basePrice,
+      imageRes = if (imageRes != 0) imageRes else initial.imageRes,
+      customImageUri = customImageUri,
+      isCustomizable = isCustomizable,
+      tags = if (tagsCsv.isBlank()) initial.tags else tagsCsv.split(","),
+      defaultSize = defaultSize,
+      allowsCustomMessage = allowsCustomMessage,
+      maxFillingsAllowed = maxFillingsAllowed,
+    )
+  }
   return SweetItem(
     id = id,
     name = name,

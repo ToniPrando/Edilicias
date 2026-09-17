@@ -52,7 +52,7 @@ fun EdiliciasApp(
   var showAdminPasswordDialog by rememberSaveable { mutableStateOf(false) }
 
   BackHandler(enabled = currentScreen != AppScreen.SPLASH) {
-    currentScreen = AppScreen.SPLASH
+    currentScreen = if (currentScreen == AppScreen.ADMIN) AppScreen.MENU else AppScreen.SPLASH
   }
 
   if (showAdminPasswordDialog) {
@@ -75,7 +75,6 @@ fun EdiliciasApp(
       AppScreen.SPLASH -> {
         SplashScreen(
           onEnterApp = { currentScreen = AppScreen.MENU },
-          onOpenAdmin = { showAdminPasswordDialog = true },
           modifier = Modifier.fillMaxSize(),
         )
       }
@@ -88,7 +87,7 @@ fun EdiliciasApp(
       }
       AppScreen.ADMIN -> {
         AdminScreen(
-          onBackToSplash = { currentScreen = AppScreen.SPLASH },
+          onBack = { currentScreen = AppScreen.MENU },
           onPreviewClientMenu = { currentScreen = AppScreen.MENU },
           modifier = Modifier.fillMaxSize(),
         )

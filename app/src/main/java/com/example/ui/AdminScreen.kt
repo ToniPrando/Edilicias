@@ -110,7 +110,7 @@ import java.util.UUID
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScreen(
-  onBackToSplash: () -> Unit,
+  onBack: () -> Unit,
   onPreviewClientMenu: () -> Unit,
   modifier: Modifier = Modifier,
 ) {
@@ -183,12 +183,12 @@ fun AdminScreen(
           },
           navigationIcon = {
             IconButton(
-              onClick = onBackToSplash,
+              onClick = onBack,
               modifier = Modifier.testTag("admin_back_btn"),
             ) {
               Icon(
                 imageVector = Icons.Rounded.ArrowBack,
-                contentDescription = "Voltar para tela inicial",
+                contentDescription = "Voltar para o cardápio",
                 tint = EdiliciasChocolate,
               )
             }
@@ -735,9 +735,21 @@ private fun SweetEditorDialog(
     contract = ActivityResultContracts.PickVisualMedia()
   ) { uri: Uri? ->
     if (uri != null) {
-      customImageUri = uri.toString()
+      val savedUri = try {
+        val dir = java.io.File(context.filesDir, "sweet_images").apply { if (!exists()) mkdirs() }
+        val targetFile = java.io.File(dir, "sweet_${System.currentTimeMillis()}.jpg")
+        context.contentResolver.openInputStream(uri)?.use { input ->
+          targetFile.outputStream().use { output ->
+            input.copyTo(output)
+          }
+        }
+        Uri.fromFile(targetFile).toString()
+      } catch (e: Exception) {
+        uri.toString()
+      }
+      customImageUri = savedUri
       isUrlInputExpanded = false
-      Toast.makeText(context, "Foto do dispositivo selecionada!", Toast.LENGTH_SHORT).show()
+      Toast.makeText(context, "Foto do dispositivo selecionada e salva!", Toast.LENGTH_SHORT).show()
     }
   }
 

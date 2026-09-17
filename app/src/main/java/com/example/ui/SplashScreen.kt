@@ -63,7 +63,6 @@ import com.example.ui.theme.EdiliciasTextSecondary
 @Composable
 fun SplashScreen(
   onEnterApp: () -> Unit,
-  onOpenAdmin: () -> Unit = {},
   modifier: Modifier = Modifier,
 ) {
   val interactionSource = remember { MutableInteractionSource() }
